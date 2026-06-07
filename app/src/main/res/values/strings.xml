@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Web Scraper</string>
+    <string name="app_title">Smart Web Scraper v4</string>
+    <string name="hint_url">Enter website URL / store URL</string>
+    <string name="hint_pages">Number of pages (default: 1)</string>
+    <string name="btn_scrape">Start Scraping</string>
+    <string name="status_idle">Enter a URL and press Start Scraping</string>
+    <string name="status_starting">Starting scraper…</string>
+    <string name="status_no_products">No products found. Site may require JavaScript rendering.</string>
+    <string name="status_saved">Done! %1$d products saved to: %2$s</string>
+    <string name="status_export_error">Export error: %1$s</string>
+    <string name="items_count">Items scraped: %1$d</string>
+    <string name="items_count_zero">Items scraped: 0</string>
+    <string name="error_empty_url">Please enter a URL</string>
+    <string name="product_image_desc">Product image</string>
+</resources>

@@ -1,0 +1,5 @@
+-keep class org.apache.poi.** { *; }
+-keep class com.webscraper.** { *; }
+-dontwarn org.apache.poi.**
+-dontwarn org.openxmlformats.**
+-dontwarn org.apache.logging.**
