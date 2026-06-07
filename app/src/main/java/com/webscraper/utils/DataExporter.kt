@@ -52,9 +52,9 @@ class DataExporter(private val context: Context) {
 
         // ── 2. Build XLSX rows ──────────────────────────────────────────────
         val rows = mutableListOf<List<String>>()
-        rows.add(listOf("#", "Title", "Description", "Image URL", "Image File"))
+        rows.add(listOf("#", "Title", "Price", "Product URL", "Image URL", "Image File"))
         products.forEachIndexed { i, p ->
-            rows.add(listOf("${i + 1}", p.title, p.description, p.imageUrl, p.localImagePath))
+            rows.add(listOf("${i + 1}", p.title, p.price, p.productUrl, p.imageUrl, p.localImagePath))
         }
 
         // ── 3. Write XLSX ───────────────────────────────────────────────────

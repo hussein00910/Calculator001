@@ -26,6 +26,7 @@ class ScrapeResultAdapter : RecyclerView.Adapter<ScrapeResultAdapter.ViewHolder>
 
     inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val tvTitle: TextView = view.findViewById(R.id.tvProductTitle)
+        val tvPrice: TextView = view.findViewById(R.id.tvProductPrice)
         val imgProduct: ImageView = view.findViewById(R.id.imgProduct)
     }
 
@@ -38,6 +39,12 @@ class ScrapeResultAdapter : RecyclerView.Adapter<ScrapeResultAdapter.ViewHolder>
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val product = items[position]
         holder.tvTitle.text = product.title
+        if (product.price.isNotEmpty()) {
+            holder.tvPrice.text = product.price
+            holder.tvPrice.visibility = View.VISIBLE
+        } else {
+            holder.tvPrice.visibility = View.GONE
+        }
         Glide.with(holder.itemView.context)
             .load(product.imageUrl)
             .placeholder(android.R.drawable.ic_menu_gallery)
