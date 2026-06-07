@@ -90,7 +90,7 @@ class ScraperEngine {
                     results.add(product)
                     onProductFound(product)
                     onProgress("  ✓ Scraped: ${title.take(40)}")
-                } catch (_: Exception) {
+                } catch (e: Exception) {
                     // skip invalid elements
                 }
             }
@@ -108,7 +108,7 @@ class ScraperEngine {
             client.newCall(request).execute().use { response ->
                 if (response.isSuccessful) response.body?.string() else null
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
             null
         }
     }

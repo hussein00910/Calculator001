@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun exportResults() {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val fileName = "products_$timestamp.xls"
+        val fileName = "products_$timestamp.csv"
         try {
             val path = ExcelExporter(this).export(allProducts, fileName)
             tvStatus.text = getString(R.string.status_saved, allProducts.size, path)

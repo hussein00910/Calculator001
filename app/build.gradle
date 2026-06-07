@@ -69,13 +69,6 @@ dependencies {
     // Async scraping
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
 
-    // Excel export (equivalent to pandas.to_excel in Python)
-    implementation('org.apache.poi:poi:5.2.3') {
-        exclude group: 'org.apache.logging.log4j'
-        exclude group: 'commons-logging'
-    }
-
     // Image loading in RecyclerView
     implementation 'com.github.bumptech.glide:glide:4.16.0'
-    annotationProcessor 'com.github.bumptech.glide:compiler:4.16.0'
 }
