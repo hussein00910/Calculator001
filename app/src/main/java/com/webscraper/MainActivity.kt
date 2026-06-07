@@ -13,7 +13,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.webscraper.models.Product
-import com.webscraper.utils.ExcelExporter
+import com.webscraper.utils.DataExporter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -92,26 +92,34 @@ class MainActivity : AppCompatActivity() {
                 }
             )
 
+            if (allProducts.isEmpty()) {
+                withContext(Dispatchers.Main) {
+                    progressBar.visibility = View.GONE
+                    btnScrape.isEnabled = true
+                    tvStatus.text = getString(R.string.status_no_products)
+                }
+                return@launch
+            }
+
+            // Export runs on IO — images are downloaded here
+            val session = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val summary = try {
+                DataExporter(this@MainActivity).exportAll(
+                    products = allProducts,
+                    session = session,
+                    onProgress = { msg ->
+                        lifecycleScope.launch(Dispatchers.Main) { tvStatus.text = msg }
+                    }
+                )
+            } catch (e: Exception) {
+                getString(R.string.status_export_error, e.message)
+            }
+
             withContext(Dispatchers.Main) {
                 progressBar.visibility = View.GONE
                 btnScrape.isEnabled = true
-                if (allProducts.isEmpty()) {
-                    tvStatus.text = getString(R.string.status_no_products)
-                } else {
-                    exportResults()
-                }
+                tvStatus.text = getString(R.string.status_saved, allProducts.size, summary)
             }
-        }
-    }
-
-    private fun exportResults() {
-        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val fileName = "products_$timestamp.csv"
-        try {
-            val path = ExcelExporter(this).export(allProducts, fileName)
-            tvStatus.text = getString(R.string.status_saved, allProducts.size, path)
-        } catch (e: Exception) {
-            tvStatus.text = getString(R.string.status_export_error, e.message)
         }
     }
 

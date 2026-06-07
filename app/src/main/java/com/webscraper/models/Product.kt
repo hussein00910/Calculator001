@@ -4,5 +4,5 @@ data class Product(
     val title: String,
     val description: String,
     val imageUrl: String,
-    val localImagePath: String = ""
+    var localImagePath: String = ""
 )
