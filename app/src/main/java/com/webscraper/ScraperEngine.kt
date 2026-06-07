@@ -66,7 +66,8 @@ class ScraperEngine {
             val pageUrl = constructPageUrl(baseUrl, page)
             onProgress("Checking page ($page): $pageUrl")
 
-            val html = fetchPage(pageUrl, baseUrl) ?: run {
+            val html = fetchPage(pageUrl, baseUrl)
+            if (html == null) {
                 onProgress("Stopped. Failed to load page $page.")
                 break
             }
