@@ -23,14 +23,16 @@ class ScraperEngine {
         }
         .build()
 
-    // Mirror of product_selectors in the Python script
+    // Ordered from most-specific to least-specific; generic selectors removed
     private val productSelectors = listOf(
+        "salla-product-card",           // Salla platform custom element (must be first)
         "div.product-grid-item",
         "li.product",
         "div.salla-product-card",
         "div.product-card",
         "div.product-item",
-        "div.item"
+        "div.product-box",              // Zid platform
+        "article.product"
     )
 
     // Mirror of title_selectors + title_classes
@@ -52,7 +54,10 @@ class ScraperEngine {
         "data-lazy", "srcset", "data-srcset", "src"
     )
 
-    private val badImageKeywords = listOf("logo", "شعار", "data:image", "placeholder")
+    private val badImageKeywords = listOf(
+        "logo", "شعار", "data:image", "placeholder",
+        "banner", "icon", "sprite", "loading", "blank", "noimage", "no-image"
+    )
 
     suspend fun scrape(
         baseUrl: String,
@@ -61,6 +66,7 @@ class ScraperEngine {
         onProductFound: (Product) -> Unit
     ): List<Product> {
         val results = mutableListOf<Product>()
+        val seenTitles = mutableSetOf<String>()
 
         for (page in 1..maxPages) {
             val pageUrl = constructPageUrl(baseUrl, page)
@@ -85,6 +91,7 @@ class ScraperEngine {
             for (element in products) {
                 try {
                     val title = extractTitle(element) ?: continue
+                    if (!seenTitles.add(title)) continue   // skip duplicates
                     val imageUrl = extractImageUrl(element, baseUrl) ?: continue
 
                     val product = Product(title = title, description = title, imageUrl = imageUrl)
@@ -120,13 +127,20 @@ class ScraperEngine {
             if (found.isNotEmpty()) return found.toList()
         }
 
-        val byClass = doc.select("div[class*=product], div[class*=item]")
+        // Fallback: class contains "product" only (drop "item" — too generic)
+        val byClass = doc.select("div[class*=product]")
         if (byClass.isNotEmpty()) return byClass.toList()
 
-        return doc.select("salla-product-card, li[class*=product]").toList()
+        return doc.select("li[class*=product]").toList()
     }
 
     private fun extractTitle(element: Element): String? {
+        // Strategy 0: Salla custom element — title in "name" attribute
+        if (element.tagName() == "salla-product-card") {
+            val name = element.attr("name").trim()
+            if (name.isNotEmpty() && badTitleWords.none { name.contains(it) }) return name
+        }
+
         // Strategy 1: match tag + class combinations (mirrors Python nested loops)
         for (tag in titleTagSelectors) {
             for (cls in titleClassSelectors) {
@@ -150,6 +164,14 @@ class ScraperEngine {
     }
 
     private fun extractImageUrl(element: Element, baseUrl: String): String? {
+        // Strategy 0: Salla custom element — thumbnail in "thumbnail" attribute
+        if (element.tagName() == "salla-product-card") {
+            val thumb = element.attr("thumbnail").trim()
+            if (thumb.isNotEmpty() && badImageKeywords.none { thumb.lowercase().contains(it) }) {
+                return resolveUrl(thumb, baseUrl)
+            }
+        }
+
         val imgEl = element.selectFirst("img") ?: return null
 
         // Anti-lazy-loading: check data attributes before src (mirrors Python possible_attributes)
