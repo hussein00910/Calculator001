@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo \"Branch: $(git branch --show-current 2>/dev/null)\"; echo \"Last commit: $(git log --oneline -1 2>/dev/null)\"; echo \"Changes: $(git status --short 2>/dev/null | wc -l) file(s)\"",
+            "statusMessage": "Checking git environment..."
+          }
+        ]
+      }
+    ]
+  }
+}
