@@ -3,10 +3,10 @@
 # (str) Title of your application
 title = Smart Web Scraper
 
-# (str) Package name — must be lowercase, no spaces
+# (str) Package name — lowercase, no spaces
 package.name = smartwebscraper
 
-# (str) Package domain (used for Android/iOS packaging)
+# (str) Package domain
 package.domain = org.webscraper
 
 # (str) Source code directory where main.py lives
@@ -15,59 +15,50 @@ source.dir = .
 # (list) Extensions to include in the APK
 source.include_exts = py,png,jpg,kv,atlas,txt
 
-# (list) Files/dirs to exclude from source package
+# (list) Directories to exclude from source package
 source.exclude_dirs = app,.github,.git,.buildozer,bin,.idea,.gradle
 
 # (str) Application version
 version = 4.0
 
-# (list) Python + Kivy requirements
-# lxml is needed by BeautifulSoup for fast HTML parsing
-# pillow is required by openpyxl for image handling in Excel
-requirements = python3,kivy==2.3.0,requests,beautifulsoup4,pandas,openpyxl,urllib3,lxml,pillow,certifi,charset-normalizer,idna,soupsieve,et-xmlfile
+# (list) Requirements — only pure-Python or safe-to-compile libraries
+# pandas, openpyxl, lxml, pillow removed: they require complex C compilation
+# beautifulsoup4 uses html.parser (built-in) — no lxml needed
+requirements = python3,kivy==2.3.0,requests,beautifulsoup4,urllib3,charset-normalizer,idna
 
 # (str) Supported orientation
 orientation = portrait
 
-# (bool) Show app in fullscreen
+# (bool) Fullscreen
 fullscreen = 0
-
-# (str) Application icon — leave blank for default
-#icon.filename = %(source.dir)s/icon.png
-
-# (str) Presplash image
-#presplash.filename = %(source.dir)s/presplash.png
 
 # ─── Android specific ────────────────────────────────────────────────────────
 
 # (list) Permissions
 android.permissions = INTERNET,WRITE_EXTERNAL_STORAGE,READ_EXTERNAL_STORAGE
 
-# Allow legacy external storage access (needed for /sdcard/Download/ on Android 10)
+# Allow legacy external storage (needed for /sdcard/Download/ on Android 10)
 android.extra_manifest_application_arguments = android:requestLegacyExternalStorage="true"
 
-# (int) Target Android API — as high as possible
+# (int) Target Android API
 android.api = 33
 
-# (int) Minimum Android API supported
-android.minapi = 26
+# (int) Minimum Android API — 21 covers ~99% of active devices
+android.minapi = 21
 
 # (str) Android NDK version
 android.ndk = 25b
 
 # (int) Android NDK API level
-android.ndk_api = 26
+android.ndk_api = 21
 
-# (str) Target architecture — arm64-v8a for modern phones
-android.arch = arm64-v8a
+# (str) Target architecture — arm64-v8a for modern 64-bit phones
+android.archs = arm64-v8a
 
 # (bool) Allow app data backup
 android.allow_backup = True
 
-# (bool) Skip checking/updating Android SDK (set True to speed up repeated builds)
-android.skip_update = False
-
-# (bool) Automatically accept Android SDK licenses (required for CI)
+# (bool) Automatically accept SDK licenses (required for CI)
 android.accept_sdk_license = True
 
 # ─── Buildozer settings ──────────────────────────────────────────────────────

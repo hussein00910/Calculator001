@@ -1,23 +1,17 @@
 """
 Smart Web Scraper v4 — Kivy Android App
 Scrapes product title, price, image, and URL from e-commerce sites.
-Saves images + Excel to /sdcard/Download/termux_stuff/
+Saves images + CSV to /sdcard/Download/termux_stuff/
 """
 
 import os
 import re
+import csv
 import threading
 from urllib.parse import urljoin, urlparse, urlencode, parse_qs, urlunparse
 
 import requests
 from bs4 import BeautifulSoup
-
-try:
-    import pandas as pd
-    PANDAS_OK = True
-except ImportError:
-    import csv
-    PANDAS_OK = False
 
 from kivy.app import App
 from kivy.uix.boxlayout import BoxLayout
@@ -39,7 +33,7 @@ except ImportError:
 _PRIMARY_SAVE = '/sdcard/Download/termux_stuff'
 _IMAGES_SUBDIR = 'images'
 
-# ── Scraper constants (mirror of ScraperEngine.kt) ───────────────────────────
+# ── Scraper constants ────────────────────────────────────────────────────────
 PRODUCT_SELECTORS = [
     'salla-product-card',      # Salla platform — highest priority
     'div.product-grid-item',
@@ -68,9 +62,7 @@ PRICE_CLASSES = [
     'price',
 ]
 
-BAD_TITLE_WORDS = ['تفاصيل', 'تخفيض',
-                   'Sale', 'خصم', 'اتصل',
-                   'تواصِل', 'قائمة']
+BAD_TITLE_WORDS = ['تفاصيل', 'تخفيض', 'Sale', 'خصم', 'اتصل', 'تواصِل', 'قائمة']
 
 IMAGE_ATTRS = ['data-lazy-src', 'data-src', 'data-original',
                'data-lazy', 'srcset', 'data-srcset', 'src']
@@ -86,7 +78,7 @@ HTTP_HEADERS = {
     'Accept-Language': 'ar,en-US;q=0.7,en;q=0.3',
 }
 
-MAX_PAGES = 20   # upper limit; stops early when no products found
+MAX_PAGES = 20
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -101,7 +93,8 @@ def _make_session():
 
 def _fetch(session, url, referer):
     try:
-        r = session.get(url, timeout=15, headers={'Referer': referer}, allow_redirects=True)
+        r = session.get(url, timeout=15, headers={'Referer': referer},
+                        allow_redirects=True)
         r.raise_for_status()
         return r.text
     except Exception:
@@ -225,7 +218,8 @@ def scrape_site(base_url, log_fn):
             log_fn(f'  ⛔ Failed to load page {page}. Stopping.')
             break
 
-        soup = BeautifulSoup(html, 'lxml')
+        # html.parser is built-in — no lxml dependency needed
+        soup = BeautifulSoup(html, 'html.parser')
         elements = _find_products(soup)
 
         if not elements:
@@ -267,7 +261,6 @@ def scrape_site(base_url, log_fn):
 # ════════════════════════════════════════════════════════════════════════════
 
 def _resolve_save_dir():
-    """Return save dir; fall back to app internal storage if /sdcard is blocked."""
     try:
         os.makedirs(_PRIMARY_SAVE, exist_ok=True)
         probe = os.path.join(_PRIMARY_SAVE, '.probe')
@@ -303,24 +296,17 @@ def save_results(products, log_fn):
         except Exception as e:
             log_fn(f'  ⚠ Image {i} failed: {e}')
 
+    # Save as CSV (pure-Python, no external library needed)
     cols = ['title', 'price', 'product_url', 'image_url', 'local_image']
+    csv_path = os.path.join(save_dir, 'products.csv')
+    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=cols)
+        writer.writeheader()
+        writer.writerows(products)
 
-    if PANDAS_OK:
-        xlsx_path = os.path.join(save_dir, 'products.xlsx')
-        df = pd.DataFrame(products, columns=cols)
-        df.index = df.index + 1   # 1-based row numbers
-        df.to_excel(xlsx_path, index_label='#')
-        log_fn(f'📊 Excel → {xlsx_path}')
-    else:
-        csv_path = os.path.join(save_dir, 'products.csv')
-        with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-            w = csv.DictWriter(f, fieldnames=cols)
-            w.writeheader()
-            w.writerows(products)
-        log_fn(f'📄 CSV → {csv_path}  (Excel library not available)')
-
-    log_fn(f'✅ Done! {total} products saved to: {save_dir}')
+    log_fn(f'📄 CSV → {csv_path}')
     log_fn(f'🖼 Images → {img_dir}')
+    log_fn(f'✅ Done! {total} products saved to: {save_dir}')
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -334,7 +320,6 @@ class SmartScraperApp(App):
 
         root = BoxLayout(orientation='vertical', padding=12, spacing=8)
 
-        # Title bar
         root.add_widget(Label(
             text='Smart Web Scraper v4',
             size_hint_y=None, height=48,
@@ -342,7 +327,6 @@ class SmartScraperApp(App):
             color=(0.4, 0.8, 1, 1),
         ))
 
-        # URL input
         self.url_input = TextInput(
             text='https://',
             hint_text='Enter website / store URL',
@@ -355,7 +339,6 @@ class SmartScraperApp(App):
         )
         root.add_widget(self.url_input)
 
-        # Button
         self.btn = Button(
             text='START SCRAPING',
             size_hint_y=None, height=50,
@@ -366,7 +349,6 @@ class SmartScraperApp(App):
         self.btn.bind(on_press=self.start_scraping)
         root.add_widget(self.btn)
 
-        # Log area
         scroll = ScrollView(size_hint=(1, 1))
         self.log_box = TextInput(
             text='Ready.\nEnter a URL above and press START SCRAPING.\n',
@@ -391,8 +373,6 @@ class SmartScraperApp(App):
                 Permission.READ_EXTERNAL_STORAGE,
             ])
 
-    # ── Button handler ───────────────────────────────────────────────────────
-
     def start_scraping(self, _instance):
         url = self.url_input.text.strip()
         if not url or url in ('https://', 'http://'):
@@ -406,8 +386,6 @@ class SmartScraperApp(App):
         self.log_box.text = f'Starting: {url}\n'
         threading.Thread(target=self._worker, args=(url,), daemon=True).start()
 
-    # ── Background worker ────────────────────────────────────────────────────
-
     def _worker(self, url):
         try:
             products = scrape_site(url, self._log)
@@ -419,7 +397,7 @@ class SmartScraperApp(App):
                     '  • Site renders products via JavaScript (dynamic content)\n'
                     '  • Site uses non-standard HTML structure\n'
                     '  • Bot protection / rate limiting active\n'
-                    'Try a different page URL (category page, not homepage).'
+                    'Try a category page URL instead of the homepage.'
                 )
             else:
                 self._log(f'\n📦 {len(products)} products found. Saving…')
@@ -434,14 +412,11 @@ class SmartScraperApp(App):
         self.btn.disabled = False
         self.btn.text = 'START SCRAPING'
 
-    # ── Thread-safe logging ──────────────────────────────────────────────────
-
     def _log(self, msg):
         Clock.schedule_once(lambda dt: self._append_log(msg + '\n'))
 
     def _append_log(self, text):
         self.log_box.text += text
-        # scroll to bottom
         Clock.schedule_once(lambda dt: setattr(self._scroll, 'scroll_y', 0), 0.05)
 
 
