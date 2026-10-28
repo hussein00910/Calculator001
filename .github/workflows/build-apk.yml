@@ -23,10 +23,19 @@ jobs:
           gradle-version: 9.6.0
 
       - name: Run unit tests
-        run: gradle :app:testDebugUnitTest --no-daemon
+        run: gradle :app:testDebugUnitTest --no-daemon --stacktrace 2>&1 | tee build.log; exit ${PIPESTATUS[0]}
+        shell: bash
 
       - name: Build debug APK
-        run: gradle :app:assembleDebug --no-daemon
+        run: gradle :app:assembleDebug --no-daemon 2>&1 | tee -a build.log; exit ${PIPESTATUS[0]}
+        shell: bash
+
+      - name: Report errors as annotations
+        if: failure()
+        shell: bash
+        run: |
+          msg=$(grep -E "^e: |What went wrong|Caused by|FAILED|error:|Could not" -A3 build.log | head -c 3500 | sed -e 's/%/%25/g' -e ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error::$msg"
 
       - uses: actions/upload-artifact@v4
         with:
