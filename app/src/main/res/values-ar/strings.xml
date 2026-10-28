@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">الحاسبة</string>
+
+    <string name="cd_clear">مسح الكل</string>
+    <string name="cd_delete">حذف</string>
+    <string name="cd_percent">نسبة مئوية</string>
+    <string name="cd_divide">قسمة</string>
+    <string name="cd_multiply">ضرب</string>
+    <string name="cd_subtract">طرح</string>
+    <string name="cd_add">جمع</string>
+    <string name="cd_equals">يساوي</string>
+    <string name="cd_decimal">الفاصلة العشرية</string>
+
+    <string name="error_division_by_zero">لا يمكن القسمة على صفر</string>
+    <string name="error_invalid_expression">صيغة غير صالحة</string>
+</resources>
